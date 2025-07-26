@@ -5,78 +5,84 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 
 import User from './models/User.js';
+import Message from './models/Message.js';
 import Conversation from './models/Conversation.js';
+import chatWithGroq from './services/groqService.js';
 
 dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 
 // MongoDB Connection
 mongoose.connect('mongodb://127.0.0.1:27017/ai_conversations', {
   useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => console.log(" MongoDB connected"))
-.catch((err) => console.error(" MongoDB connection error:", err));
+  useUnifiedTopology: true
+}).then(() => {
+  console.log(" MongoDB connected");
+}).catch(err => {
+  console.error(" MongoDB connection error:", err);
+});
 
 // Root Route
 app.get('/', (req, res) => {
-  res.send('🤖 AI Chat Backend is running');
+  res.send('AI Chat Backend is running');
 });
 
-// Core Chat API (Milestone 4)
+// Core Chat API (Milestone 4 + 5)
 app.post('/api/chat', async (req, res) => {
-  const { message, conversation_id, user_id } = req.body;
+  const { userId, message, conversationId } = req.body;
 
-  if (!message || !user_id) {
-    return res.status(400).json({ error: 'message and user_id are required' });
+  if (!userId || !message) {
+    return res.status(400).json({ error: "Missing userId or message" });
   }
 
   try {
     let conversation;
 
-    // If a conversation ID is provided, try to fetch it
-    if (conversation_id) {
-      conversation = await Conversation.findById(conversation_id);
+    // If conversation ID is provided, fetch it. Otherwise create new.
+    if (conversationId) {
+      conversation = await Conversation.findById(conversationId);
+      if (!conversation) return res.status(404).json({ error: "Conversation not found" });
+    } else {
+      conversation = new Conversation({ user: userId, messages: [] });
     }
 
-    // If not found or not provided, create a new one
-    if (!conversation) {
-      conversation = new Conversation({
-        userId: user_id,
-        messages: [],
-      });
-    }
+    // Save user message
+    const userMessage = new Message({ sender: 'user', content: message });
+    await userMessage.save();
+    conversation.messages.push(userMessage._id);
 
-    // Add the user's message
-    conversation.messages.push({ sender: 'user', text: message });
+    // Call LLM for AI response
+    const aiResponse = await chatWithGroq([
+      { role: "system", content: "You are a helpful AI assistant for an eCommerce platform." },
+      { role: "user", content: message }
+    ]);
 
-    // Placeholder AI response (Milestone 5 will use Groq)
-    const aiResponse = `AI: I received your message "${message}"`;
-
-    // Add AI's response
-    conversation.messages.push({ sender: 'ai', text: aiResponse });
+    const aiMessage = new Message({ sender: 'ai', content: aiResponse.content });
+    await aiMessage.save();
+    conversation.messages.push(aiMessage._id);
 
     // Save conversation
     await conversation.save();
 
-    // Return full conversation
-    res.json({
-      conversation_id: conversation._id,
-      messages: conversation.messages,
+    res.status(200).json({
+      conversationId: conversation._id,
+      messages: [
+        { role: 'user', content: userMessage.content },
+        { role: 'ai', content: aiMessage.content }
+      ]
     });
 
   } catch (err) {
-    console.error('Chat error:', err);
-    res.status(500).json({ error: 'Something went wrong while processing your message.' });
+    console.error(" Error handling chat:", err);
+    res.status(500).json({ error: "Server error" });
   }
 });
 
-// Start Server
+// Start server
 app.listen(PORT, () => {
   console.log(` Server running on http://localhost:${PORT}`);
 });
