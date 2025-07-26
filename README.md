@@ -43,19 +43,19 @@ git clone https://github.com/shriram-8teen/think41-task2.git
 cd think41-task2
 ````
 ## SetUp Backend 
-### cd backend
-### npm install
-### Add a .env file
+cd backend
+ npm install
+ Add a .env file
 GROQ_API_KEY=your_groq_api_key
-### Start Backend Server
+Start Backend Server
 npm start
-# Server runs on http://localhost:3001
+ Server runs on http://localhost:3001
 
 ## 3. Setup Frontend
-###  cd ../frontend
+  cd ../frontend
 npm install
 npm start
-# Opens on http://localhost:3000
+#Opens on http://localhost:3000
 ## 4.  Features
 Chat interface with user + AI messages
 
