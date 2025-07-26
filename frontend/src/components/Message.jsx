@@ -1,16 +1,13 @@
 import React from 'react';
 
-const Message = ({ sender, text }) => {
-  const isUser = sender === 'user';
+const Message = ({ role, content }) => {
   return (
     <div
-      style={{
-        textAlign: isUser ? 'right' : 'left',
-        margin: '8px 0',
-        color: isUser ? 'blue' : 'green'
-      }}
+      className={`p-2 my-1 rounded-lg max-w-lg ${
+        role === 'user' ? 'bg-blue-200 self-end' : 'bg-gray-200 self-start'
+      }`}
     >
-      <strong>{isUser ? 'You' : 'AI'}:</strong> {text}
+      {content}
     </div>
   );
 };

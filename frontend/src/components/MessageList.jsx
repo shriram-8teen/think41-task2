@@ -1,17 +1,14 @@
 import React from 'react';
+import { useChat } from '../contexts/ChatContext';
 import Message from './Message';
 
-// Dummy static messages for now
-const messages = [
-  { sender: 'user', text: 'Hi there!' },
-  { sender: 'ai', text: 'Hello! How can I help you today?' }
-];
-
 const MessageList = () => {
+  const { messages } = useChat();
+
   return (
-    <div className="message-list" style={{ padding: 10, border: '1px solid #ccc', minHeight: 200 }}>
-      {messages.map((msg, index) => (
-        <Message key={index} sender={msg.sender} text={msg.text} />
+    <div className="flex flex-col space-y-2 overflow-y-auto h-[300px] p-2">
+      {messages.map((msg, idx) => (
+        <Message key={idx} role={msg.role} content={msg.content} />
       ))}
     </div>
   );

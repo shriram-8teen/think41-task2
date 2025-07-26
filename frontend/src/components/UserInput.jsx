@@ -1,23 +1,30 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { useChat } from '../contexts/ChatContext';
 
 const UserInput = () => {
-  const [input, setInput] = useState('');
+  const { userInput, setUserInput, sendMessage, loading } = useChat();
 
-  const handleSend = () => {
-    console.log('Send:', input);
-    setInput('');
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') sendMessage();
   };
 
   return (
-    <div style={{ marginTop: 10 }}>
+    <div className="flex mt-4">
       <input
-        type="text"
-        value={input}
-        onChange={e => setInput(e.target.value)}
-        placeholder="Type a message..."
-        style={{ width: '80%', padding: 8 }}
+        className="flex-1 border p-2 rounded-l"
+        value={userInput}
+        onChange={(e) => setUserInput(e.target.value)}
+        onKeyDown={handleKeyDown}
+        disabled={loading}
+        placeholder="Type your message..."
       />
-      <button onClick={handleSend} style={{ padding: 8 }}>Send</button>
+      <button
+        onClick={sendMessage}
+        disabled={loading}
+        className="bg-blue-500 text-white px-4 py-2 rounded-r"
+      >
+        Send
+      </button>
     </div>
   );
 };
